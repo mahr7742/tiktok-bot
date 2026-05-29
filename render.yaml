@@ -5,6 +5,6 @@ services:
 
     buildCommand: |
       npm install
-      pip install --upgrade yt-dlp
+      python3 -m pip install yt-dlp
 
     startCommand: node index.js
