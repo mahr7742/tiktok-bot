@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
-const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs');
+const express = require('express');
 
 const TOKEN = process.env.BOT_TOKEN;
 
@@ -24,7 +24,6 @@ bot.on('message', async (msg) => {
 
   if (!text) return;
 
-  // TikTok أو Instagram
   if (
     text.includes('tiktok.com') ||
     text.includes('instagram.com')
@@ -35,44 +34,45 @@ bot.on('message', async (msg) => {
       '⏳ جاري تحميل الفيديو...'
     );
 
-    const fileName = `video_${Date.now()}.mp4`;
+    const file = `video_${Date.now()}.mp4`;
 
-    exec(
-      `yt-dlp -o "${fileName}" "${text}"`,
-      async (error) => {
+    const command =
+      `yt-dlp -f mp4 -o "${file}" "${text}"`;
 
-        if (error) {
-          console.log(error);
+    exec(command, async (error) => {
 
-          return bot.sendMessage(
-            chatId,
-            '❌ فشل تحميل الفيديو'
-          );
-        }
+      if (error) {
 
-        try {
+        console.log(error);
 
-          await bot.sendVideo(
-            chatId,
-            fileName,
-            {
-              caption: '✅ تم تحميل الفيديو'
-            }
-          );
-
-          fs.unlinkSync(fileName);
-
-        } catch (err) {
-
-          console.log(err);
-
-          bot.sendMessage(
-            chatId,
-            '❌ حدث خطأ أثناء إرسال الفيديو'
-          );
-        }
+        return bot.sendMessage(
+          chatId,
+          '❌ فشل التحميل'
+        );
       }
-    );
+
+      try {
+
+        await bot.sendVideo(
+          chatId,
+          fs.createReadStream(file),
+          {
+            caption: '✅ تم التحميل'
+          }
+        );
+
+        fs.unlinkSync(file);
+
+      } catch (err) {
+
+        console.log(err);
+
+        bot.sendMessage(
+          chatId,
+          '❌ حدث خطأ أثناء الإرسال'
+        );
+      }
+    });
 
   } else {
 
