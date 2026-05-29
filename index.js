@@ -1,6 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
 const express = require('express');
+const { exec } = require('child_process');
+const fs = require('fs');
 
 const TOKEN = process.env.BOT_TOKEN;
 
@@ -23,98 +24,61 @@ bot.on('message', async (msg) => {
 
   if (!text) return;
 
-  // TikTok
-  if (text.includes('tiktok.com')) {
-
-    try {
-
-      await bot.sendMessage(
-        chatId,
-        '⏳ جاري تحميل فيديو تيك توك...'
-      );
-
-      const api =
-        `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`;
-
-      const response = await axios.get(api);
-
-      if (
-        !response.data.data ||
-        !response.data.data.play
-      ) {
-        return bot.sendMessage(
-          chatId,
-          '❌ فشل تحميل فيديو تيك توك'
-        );
-      }
-
-      const videoUrl = response.data.data.play;
-
-      await bot.sendVideo(chatId, videoUrl, {
-        caption: '✅ تم تحميل فيديو TikTok'
-      });
-
-    } catch (err) {
-
-      console.log(err.message);
-
-      bot.sendMessage(
-        chatId,
-        '❌ حدث خطأ أثناء تحميل تيك توك'
-      );
-    }
-
-  }
-
-  // Instagram
-  else if (text.includes('instagram.com')) {
-
-    try {
-
-      await bot.sendMessage(
-        chatId,
-        '⏳ جاري تحميل فيديو انستجرام...'
-      );
-
-      const api =
-        `https://api.vreden.my.id/api/igdl?url=${encodeURIComponent(text)}`;
-
-      const response = await axios.get(api);
-
-      const videoUrl =
-        response.data.data?.[0]?.url ||
-        response.data.result?.[0]?.url;
-
-      if (!videoUrl) {
-
-        return bot.sendMessage(
-          chatId,
-          '❌ فشل تحميل فيديو انستجرام'
-        );
-      }
-
-      await bot.sendVideo(chatId, videoUrl, {
-        caption: '✅ تم تحميل فيديو Instagram'
-      });
-
-    } catch (err) {
-
-      console.log(err.response?.data || err.message);
-
-      bot.sendMessage(
-        chatId,
-        '❌ حدث خطأ أثناء تحميل انستجرام'
-      );
-    }
-
-  }
-
-  // Other messages
-  else {
+  if (
+    text.includes('tiktok.com') ||
+    text.includes('instagram.com')
+  ) {
 
     bot.sendMessage(
       chatId,
-      '📥 أرسل رابط TikTok أو Instagram لتحميل الفيديو'
+      '⏳ جاري تحميل الفيديو...'
+    );
+
+    const fileName = `video_${Date.now()}.mp4`;
+
+    const command =
+      `yt-dlp -f mp4 -o "${fileName}" "${text}"`;
+
+    exec(command, async (error) => {
+
+      if (error) {
+        console.log(error);
+
+        return bot.sendMessage(
+          chatId,
+          '❌ فشل تحميل الفيديو'
+        );
+      }
+
+      try {
+
+        await bot.sendVideo(
+          chatId,
+          fileName,
+          {
+            caption: '✅ تم تحميل الفيديو'
+          }
+        );
+
+        fs.unlinkSync(fileName);
+
+      } catch (err) {
+
+        console.log(err);
+
+        bot.sendMessage(
+          chatId,
+          '❌ حدث خطأ أثناء الإرسال'
+        );
+      }
+
+    });
+
+  } else {
+
+    bot.sendMessage(
+      chatId,
+      '📥 أرسل رابط TikTok أو Instagram'
     );
 
   }
