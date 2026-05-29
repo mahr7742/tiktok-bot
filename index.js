@@ -5,6 +5,11 @@ const express = require('express');
 
 const TOKEN = process.env.BOT_TOKEN;
 
+if (!TOKEN) {
+  console.log("BOT_TOKEN missing");
+  process.exit(1);
+}
+
 const bot = new TelegramBot(TOKEN, {
   polling: true
 });
@@ -15,7 +20,9 @@ app.get('/', (req, res) => {
   res.send('Bot is running');
 });
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server started");
+});
 
 bot.on('message', async (msg) => {
 
@@ -37,7 +44,7 @@ bot.on('message', async (msg) => {
     const file = `video_${Date.now()}.mp4`;
 
     const command =
-      `yt-dlp --no-playlist -f mp4 -o "${file}" "${text}"`;
+      `yt-dlp --no-playlist -o "${file}" "${text}"`;
 
     exec(command, async (error, stdout, stderr) => {
 
@@ -57,4 +64,28 @@ bot.on('message', async (msg) => {
           chatId,
           fs.createReadStream(file),
           {
-            caption: '
+            caption: '✅ تم التحميل'
+          }
+        );
+
+        fs.unlinkSync(file);
+
+      } catch (err) {
+
+        console.log(err);
+
+        bot.sendMessage(
+          chatId,
+          '❌ فشل إرسال الفيديو'
+        );
+      }
+    });
+
+  } else {
+
+    bot.sendMessage(
+      chatId,
+      '📥 أرسل رابط TikTok أو Instagram'
+    );
+  }
+});
