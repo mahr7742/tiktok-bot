@@ -1,11 +1,4 @@
 {
-"name":"tiktokbot",
-"version":"1.0.0",
-"main":"index.js",
-"scripts":{
-"start":"node index.js"
-},
-  {
   "name": "tiktokbot",
   "version": "1.0.0",
   "main": "index.js",
