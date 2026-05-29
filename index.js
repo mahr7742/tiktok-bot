@@ -31,19 +31,19 @@ bot.on('message', async (msg) => {
 
     bot.sendMessage(
       chatId,
-      '⏳ جاري تحميل الفيديو...'
+      '⏳ جاري التحميل...'
     );
 
     const file = `video_${Date.now()}.mp4`;
 
     const command =
-      `yt-dlp -f mp4 -o "${file}" "${text}"`;
+      `yt-dlp --no-playlist -f mp4 -o "${file}" "${text}"`;
 
-    exec(command, async (error) => {
+    exec(command, async (error, stdout, stderr) => {
 
       if (error) {
 
-        console.log(error);
+        console.log(stderr);
 
         return bot.sendMessage(
           chatId,
@@ -57,28 +57,4 @@ bot.on('message', async (msg) => {
           chatId,
           fs.createReadStream(file),
           {
-            caption: '✅ تم التحميل'
-          }
-        );
-
-        fs.unlinkSync(file);
-
-      } catch (err) {
-
-        console.log(err);
-
-        bot.sendMessage(
-          chatId,
-          '❌ حدث خطأ أثناء الإرسال'
-        );
-      }
-    });
-
-  } else {
-
-    bot.sendMessage(
-      chatId,
-      '📥 أرسل رابط TikTok أو Instagram'
-    );
-  }
-});
+            caption: '
