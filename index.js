@@ -28,7 +28,7 @@ bot.on('message', async (msg) => {
 
     try {
 
-      bot.sendMessage(
+      await bot.sendMessage(
         chatId,
         '⏳ جاري تحميل فيديو تيك توك...'
       );
@@ -56,6 +56,8 @@ bot.on('message', async (msg) => {
 
     } catch (err) {
 
+      console.log(err.message);
+
       bot.sendMessage(
         chatId,
         '❌ حدث خطأ أثناء تحميل تيك توك'
@@ -69,13 +71,13 @@ bot.on('message', async (msg) => {
 
     try {
 
-      bot.sendMessage(
+      await bot.sendMessage(
         chatId,
         '⏳ جاري تحميل فيديو انستجرام...'
       );
 
       const api =
-        `https://api.agatz.xyz/api/igdl?url=${encodeURIComponent(text)}`;
+        `https://api.vreden.my.id/api/igdl?url=${encodeURIComponent(text)}`;
 
       const response = await axios.get(api);
 
