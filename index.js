@@ -1,39 +1,75 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const express = require('express');
 
-const token = process.env.BOT_TOKEN;
+const TOKEN = process.env.BOT_TOKEN;
+const bot = new TelegramBot(TOKEN, { polling: true });
 
-const bot = new TelegramBot(token, { polling: true });
-
-bot.onText(/\/start/, (msg) => {
-bot.sendMessage(msg.chat.id,'أرسل رابط تيك توك');
+const app = express();
+app.get('/', (req, res) => {
+  res.send('Bot is running');
 });
+
+app.listen(process.env.PORT || 3000);
 
 bot.on('message', async (msg) => {
-const text = msg.text;
+  const chatId = msg.chat.id;
+  const text = msg.text;
 
-if (!text.includes('tiktok.com')) return;
+  if (!text) return;
 
-try {
-const api = `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`;
+  // TikTok
+  if (text.includes('tiktok.com')) {
+    try {
+      bot.sendMessage(chatId, '⏳ جاري تحميل فيديو تيك توك...');
 
-const res = await axios.get(api);
+      const api = `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`;
 
-bot.sendVideo(msg.chat.id, res.data.data.play);
+      const response = await axios.get(api);
 
-} catch {
-bot.sendMessage(msg.chat.id,'حدث خطأ');
-}
-});
-const express = require("express");
-const app = express();
+      if (!response.data.data || !response.data.data.play) {
+        return bot.sendMessage(chatId, '❌ فشل تحميل فيديو تيك توك');
+      }
 
-app.get("/", (req, res) => {
-  res.send("Bot is running");
-});
+      const videoUrl = response.data.data.play;
 
-const PORT = process.env.PORT || 3000;
+      await bot.sendVideo(chatId, videoUrl, {
+        caption: '✅ تم تحميل فيديو TikTok'
+      });
 
-app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+    } catch (err) {
+      bot.sendMessage(chatId, '❌ حدث خطأ أثناء تحميل تيك توك');
+    }
+  }
+
+  // Instagram
+  else if (text.includes('instagram.com')) {
+    try {
+      bot.sendMessage(chatId, '⏳ جاري تحميل فيديو انستجرام...');
+
+      const api = `https://igram.world/api/ig?url=${encodeURIComponent(text)}`;
+
+      const response = await axios.get(api);
+
+      if (!response.data || !response.data.video_url) {
+        return bot.sendMessage(chatId, '❌ فشل تحميل فيديو انستجرام');
+      }
+
+      const videoUrl = response.data.video_url;
+
+      await bot.sendVideo(chatId, videoUrl, {
+        caption: '✅ تم تحميل فيديو Instagram'
+      });
+
+    } catch (err) {
+      bot.sendMessage(chatId, '❌ حدث خطأ أثناء تحميل انستجرام');
+    }
+  }
+
+  else {
+    bot.sendMessage(
+      chatId,
+      '📥 أرسل رابط TikTok أو Instagram لتحميل الفيديو'
+    );
+  }
 });
