@@ -42,18 +42,7 @@ bot.on('message', async (msg) => {
     }
   }
 
-  // Instagram
-  else if (text.includes('instagram.com')) {
-    try {
-      bot.sendMessage(chatId, '⏳ جاري تحميل فيديو انستجرام...');
-
-      const api = `https://igram.world/api/ig?url=${encodeURIComponent(text)}`;
-
-      const response = await axios.get(api);
-
-      if (!response.data || !response.data.video_url) {
-        return bot.sendMessage(chatId, '❌ فشل تحميل فيديو انستجرام');
-      }
+  //
 
       const videoUrl = response.data.video_url;
 
@@ -69,7 +58,36 @@ bot.on('message', async (msg) => {
   else {
     bot.sendMessage(
       chatId,
-      '📥 أرسل رابط TikTok أو Instagram لتحميل الفيديو'
+    // Instagram
+  else if (text.includes('instagram.com')) {
+    try {
+      bot.sendMessage(chatId, '⏳ جاري تحميل فيديو انستجرام...');
+
+      const api = `https://api.agatz.xyz/api/igdl?url=${encodeURIComponent(text)}`;
+
+      const response = await axios.get(api);
+
+      const videoUrl =
+        response.data.data?.[0]?.url ||
+        response.data.result?.[0]?.url;
+
+      if (!videoUrl) {
+        return bot.sendMessage(chatId, '❌ فشل تحميل فيديو انستجرام');
+      }
+
+      await bot.sendVideo(chatId, videoUrl, {
+        caption: '✅ تم تحميل فيديو Instagram'
+      });
+
+    } catch (err) {
+      console.log(err.response?.data || err.message);
+
+      bot.sendMessage(
+        chatId,
+        '❌ حدث خطأ أثناء تحميل انستجرام'
+      );
+    }
+    }  '📥 أرسل رابط TikTok أو Instagram لتحميل الفيديو'
     );
   }
 });
