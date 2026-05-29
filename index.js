@@ -24,6 +24,7 @@ bot.on('message', async (msg) => {
 
   if (!text) return;
 
+  // TikTok أو Instagram
   if (
     text.includes('tiktok.com') ||
     text.includes('instagram.com')
@@ -36,43 +37,42 @@ bot.on('message', async (msg) => {
 
     const fileName = `video_${Date.now()}.mp4`;
 
-    const command =
-      `yt-dlp -f mp4 -o "${fileName}" "${text}"`;
+    exec(
+      `yt-dlp -o "${fileName}" "${text}"`,
+      async (error) => {
 
-    exec(command, async (error) => {
+        if (error) {
+          console.log(error);
 
-      if (error) {
-        console.log(error);
+          return bot.sendMessage(
+            chatId,
+            '❌ فشل تحميل الفيديو'
+          );
+        }
 
-        return bot.sendMessage(
-          chatId,
-          '❌ فشل تحميل الفيديو'
-        );
+        try {
+
+          await bot.sendVideo(
+            chatId,
+            fileName,
+            {
+              caption: '✅ تم تحميل الفيديو'
+            }
+          );
+
+          fs.unlinkSync(fileName);
+
+        } catch (err) {
+
+          console.log(err);
+
+          bot.sendMessage(
+            chatId,
+            '❌ حدث خطأ أثناء إرسال الفيديو'
+          );
+        }
       }
-
-      try {
-
-        await bot.sendVideo(
-          chatId,
-          fileName,
-          {
-            caption: '✅ تم تحميل الفيديو'
-          }
-        );
-
-        fs.unlinkSync(fileName);
-
-      } catch (err) {
-
-        console.log(err);
-
-        bot.sendMessage(
-          chatId,
-          '❌ حدث خطأ أثناء الإرسال'
-        );
-      }
-
-    });
+    );
 
   } else {
 
@@ -80,7 +80,5 @@ bot.on('message', async (msg) => {
       chatId,
       '📥 أرسل رابط TikTok أو Instagram'
     );
-
   }
-
 });
